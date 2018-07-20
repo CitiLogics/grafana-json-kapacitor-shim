@@ -13,14 +13,14 @@ let port = ""
 if(process.env.KAPGRAF_SHIM_KAPACITOR_HOST){
   server = process.env.KAPGRAF_SHIM_KAPACITOR_HOST
 } else {
-  console.log("Server (kapacitor_server) environment variable not found")
+  console.log("Server (KAPGRAF_SHIM_KAPACITOR_HOST) environment variable not found")
   process.exit(0)
 }
 if(process.env.KAPGRAF_SHIM_HTTP_NODE){
   port = process.env.KAPGRAF_SHIM_HTTP_NODE
 }
  else {
-  console.log("Port (kapacitor_port) environment variable not found")
+  console.log("Port (KAPGRAF_SHIM_HTTP_NODE) environment variable not found")
   process.exit(0)
 }
 
