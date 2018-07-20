@@ -35,3 +35,16 @@ npm install
 node index.js
 ```
 runs on port 3333
+
+# How do I use this with Grafana?
+Download the SimpleJSON datasource plugin for your grafana dashboard [SimpleJSON](https://grafana.com/plugins/grafana-simple-json-datasource)
+It acts as a data source provider, therefore we need to configure it as follows.
+
+* In configuration > datasource > add new datasource fill the details and select type to be SimpleJSON
+![data-source](https://github.com/CitiLogics/grafana-json-kapacitor-shim/blob/raw/master/data-source-config.PNG)
+
+* In the graph data source property select the data source that was created in previous step
+![graph-config](https://github.com/CitiLogics/grafana-json-kapacitor-shim/blob/raw/master/graph-config.PNG)
+
+* Your list of kapacitor tasks will now be visible.
+![kapacitor-tasks](https://github.com/CitiLogics/grafana-json-kapacitor-shim/blob/raw/master/kapacitor-task.PNG)
