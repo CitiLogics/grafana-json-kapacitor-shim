@@ -14,9 +14,10 @@ kapacitor_port=<port>
 ```
 by default your influx kapacitor port is 9092.
 
-to start the server runs on port 3333
+to start the server
 
 ```
 npm install
 node index.js
 ```
+runs on port 3333
