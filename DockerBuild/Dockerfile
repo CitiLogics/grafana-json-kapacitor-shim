@@ -2,7 +2,6 @@ from node:carbon-alpine
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm i -g nodemon
 RUN npm i
 
 COPY . .

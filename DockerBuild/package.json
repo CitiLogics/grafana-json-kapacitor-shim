@@ -1,10 +1,11 @@
 {
   "name": "grafana-kapacitor-portal",
   "version": "1.0.0",
-  "description": "",
+  "description": "A docker-based service that makes Kapacitor httpOut endpoints accessible to the Grafana Simple JSON Datasource plugin.",
+  "repository": "https://github.com/CitiLogics/grafana-json-kapacitor-shim",
   "main": "index.js",
   "scripts": {
-    "start" : "nodemon index.js",
+    "start" : "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

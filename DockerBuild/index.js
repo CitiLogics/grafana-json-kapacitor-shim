@@ -16,11 +16,11 @@ if(process.env.KAPGRAF_SHIM_KAPACITOR_HOST){
   console.log("Server (KAPGRAF_SHIM_KAPACITOR_HOST) environment variable not found")
   process.exit(0)
 }
-if(process.env.KAPGRAF_SHIM_HTTP_NODE){
-  port = process.env.KAPGRAF_SHIM_HTTP_NODE
+if(process.env.KAPGRAF_SHIM_KAPACITOR_PORT){
+  port = process.env.KAPGRAF_KAPACITOR_PORT
 }
  else {
-  console.log("Port (KAPGRAF_SHIM_HTTP_NODE) environment variable not found")
+  console.log("Port (KAPGRAF_SHIM_KAPACITOR_PORT) environment variable not found")
   process.exit(0)
 }
 
