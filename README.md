@@ -9,8 +9,8 @@ A docker-based service that makes Kapacitor httpOut endpoints accessible to the 
 Once the task is defined in kapacitor and the endpoint is emitting JSON data configure these environment variables
 
 ```
-kapacitor_server=<serverip>
-kapacitor_port=<port>
+KAPGRAF_SHIM_KAPACITOR_HOST=<server-ip>
+KAPGRAF_SHIM_HTTP_NODE=<port>
 ```
 by default your influx kapacitor port is 9092.
 
