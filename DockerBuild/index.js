@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 var app = express();
 var fetch = require("node-fetch");
-
+const moment = require('moment-timezone');
 app.use(bodyParser.json());
 
 let server = ""
@@ -118,7 +118,46 @@ app.all('/query', function(req, res){
           })
         }
       })
-      res.json(tsResult);
+
+      if(req.headers.format && req.headers.format == 'datalyzer') {
+        let datalyzerRes = []
+        // check and exit if daterange header is not set
+        let dateRange = req.headers.daterange
+        let generator = req.headers.generator
+        let today = new Date()
+        // the daterange is a string witnh 120d / 60d / 30d so we need to remove the 'd' and parse it as int
+        dateRange = dateRange.toString().replace( /d/g, '')
+        dateRange = parseInt(dateRange)
+
+
+        //here send the data in the right format
+        _.each(tsResult, (obj) => {
+          //each obj has target prop which has all the details for each datapoint generate one object
+          let re = /\{.*\}/i;
+          let match = obj.target.match(re);
+          let tagData = JSON.parse(match[0])
+          _.each(obj.datapoints, (values) => {
+            //check if the date falls within the daterange
+            let diffDays = parseInt((today - new Date(values[1])) / (1000 * 60 * 60 * 24))
+
+            if(tagData.generator == generator && diffDays <= dateRange){
+              let temp = {}
+              temp['generator'] = tagData.generator
+              temp['number'] = tagData.number
+              temp['site'] = tagData.site
+              temp['units'] = tagData.units
+              temp['elapsed'] = values[0]
+              temp['time'] = moment(new Date(values[1])).tz('America/New_York')
+              temp['location'] = tagData.location? tagData.location : ''
+              temp['method'] = tagData.method? tagData.method : ''
+              datalyzerRes.push(temp)
+            }
+          })
+        })
+        res.json(datalyzerRes);
+      } else {
+        res.json(tsResult);
+      }
       res.end();
     })
   })
