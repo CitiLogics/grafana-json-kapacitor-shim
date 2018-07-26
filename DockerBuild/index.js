@@ -131,29 +131,7 @@ app.all('/query', function(req, res){
 
 
         //here send the data in the right format
-        _.each(tsResult, (obj) => {
-          //each obj has target prop which has all the details for each datapoint generate one object
-          let re = /\{.*\}/i;
-          let match = obj.target.match(re);
-          let tagData = JSON.parse(match[0])
-          _.each(obj.datapoints, (values) => {
-            //check if the date falls within the daterange
-            let diffDays = parseInt((today - new Date(values[1])) / (1000 * 60 * 60 * 24))
 
-            if(tagData.generator == generator && diffDays <= dateRange){
-              let temp = {}
-              temp['generator'] = tagData.generator
-              temp['number'] = tagData.number
-              temp['site'] = tagData.site
-              temp['units'] = tagData.units
-              temp['elapsed'] = values[0]
-              temp['time'] = moment(new Date(values[1])).tz('America/New_York')
-              temp['location'] = tagData.location? tagData.location : ''
-              temp['method'] = tagData.method? tagData.method : ''
-              datalyzerRes.push(temp)
-            }
-          })
-        })
         res.json(datalyzerRes);
       } else {
         res.json(tsResult);
@@ -164,20 +142,21 @@ app.all('/query', function(req, res){
 
 });
 
-app.all('/tag[\-]keys', function(req, res) {
-  setCORSHeaders(res);
-  res.json({"test" :"test"});
-  res.end();
-});
-
-app.all('/tag[\-]values', function(req, res) {
-  setCORSHeaders(res);
-  console.log(req.url);
-  console.log(req.body);
-
-  res.json({"testval":"testval"})
-  res.end();
-});
+// tag-keys and values doesnt do anything !
+// app.all('/tag[\-]keys', function(req, res) {
+//   setCORSHeaders(res);
+//   res.json({"test" :"test"});
+//   res.end();
+// });
+//
+// app.all('/tag[\-]values', function(req, res) {
+//   setCORSHeaders(res);
+//   console.log(req.url);
+//   console.log(req.body);
+//
+//   res.json({"testval":"testval"})
+//   res.end();
+// });
 
 
 app.listen(3333);
