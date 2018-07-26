@@ -17,7 +17,7 @@ if(process.env.KAPGRAF_SHIM_KAPACITOR_HOST){
   process.exit(0)
 }
 if(process.env.KAPGRAF_SHIM_KAPACITOR_PORT){
-  port = process.env.KAPGRAF_KAPACITOR_PORT
+  port = process.env.KAPGRAF_SHIM_KAPACITOR_PORT
 }
  else {
   console.log("Port (KAPGRAF_SHIM_KAPACITOR_PORT) environment variable not found")
@@ -95,7 +95,7 @@ console.log( new Date() + " /:GET/query")
     .then((seriesData) => {
       _.each(seriesData.series, function(data) {
         let temp = {}
-        temp['target'] = data.tags[0]
+        temp['target'] = data.tags[Object.keys(data.tags)[0]]
         _.map(data.values, (val) =>{
           //getting date, value but we need value, date
           let newtemp = val[1]
