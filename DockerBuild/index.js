@@ -83,7 +83,7 @@ app.all('/search', function(req, res){
 app.all('/query', function(req, res){
   // This endpoint gets the data
   setCORSHeaders(res);
-console.log( new Date() + " /:GET/query")
+  console.log( new Date() + " /:GET/query")
   var tsResult = [];
   let targets = req.body.targets
   _.each(targets, (targetObject) => {
@@ -96,11 +96,10 @@ console.log( new Date() + " /:GET/query")
       _.each(seriesData.series, function(data) {
         let temp = {}
         let tempTag = ""
-
-        for(let [key, value] of Object.entries(data.tags)){
-            tempTag = tempTag + key + " = " + value + "|"
-        }
-        temp['target'] = tempTag
+        // for(let [key, value] of Object.entries(data.tags)){
+        //     tempTag = tempTag + key + " = " + value + "|"
+        // }
+        temp['target'] = JSON.stringify(data.tags)
         _.map(data.values, (val) =>{
           //getting date, value but we need value, date
           let newtemp = val[1]
