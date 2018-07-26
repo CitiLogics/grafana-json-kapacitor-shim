@@ -95,7 +95,12 @@ console.log( new Date() + " /:GET/query")
     .then((seriesData) => {
       _.each(seriesData.series, function(data) {
         let temp = {}
-        temp['target'] = data.tags[Object.keys(data.tags)[0]]
+        let tempTag = ""
+        _.each(data.tags, (tags) => {
+          tempTag = tempTag + "|" + tags
+        })
+        tempTag += "|"
+        temp['target'] = tempTag
         _.map(data.values, (val) =>{
           //getting date, value but we need value, date
           let newtemp = val[1]
@@ -104,7 +109,9 @@ console.log( new Date() + " /:GET/query")
         })
         temp['datapoints'] = data.values
         tsResult.push(temp)
+
       })
+
       res.json(tsResult);
       res.end();
     })
