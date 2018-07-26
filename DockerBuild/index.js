@@ -99,15 +99,24 @@ app.all('/query', function(req, res){
         // for(let [key, value] of Object.entries(data.tags)){
         //     tempTag = tempTag + key + " = " + value + "|"
         // }
-        temp['target'] = JSON.stringify(data.tags)
-        _.map(data.values, (val) =>{
-          //getting date, value but we need value, date
-          let newtemp = val[1]
-          val[1] = new Date(val[0]).getTime();
-          val[0] = newtemp
-        })
-        temp['datapoints'] = data.values
-        tsResult.push(temp)
+        if(data.columns){
+          //there is a columns object it can have more than one measure.
+          _.each(data.columns, (columnName) => {
+            if(columnName != "time") {
+               temp['target'] = data.name + "." + columnName + JSON.stringify(data.tags)
+               //store the index of the column so that we can grab that value
+               let valueIndex = _.indexOf(data.columns, columnName)
+               _.map(data.values, (val) =>{
+                 //getting date, value but we need value, date
+                 let dataValue = val[valueIndex]
+                 val[1] = new Date(val[0]).getTime();
+                 val[0] = dataValue
+               })
+               temp['datapoints'] = data.values
+               tsResult.push(temp)
+            }
+          })
+        }
       })
       res.json(tsResult);
       res.end();
