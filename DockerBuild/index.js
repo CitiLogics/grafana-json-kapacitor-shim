@@ -117,6 +117,21 @@ console.log( new Date() + " /:GET/query")
 
 });
 
+app.all('/tag[\-]keys', function(req, res) {
+  setCORSHeaders(res);
+  res.json({"test" :"test"});
+  res.end();
+});
+
+app.all('/tag[\-]values', function(req, res) {
+  setCORSHeaders(res);
+  console.log(req.url);
+  console.log(req.body);
+
+  res.json({"testval":"testval"})
+  res.end();
+});
+
 
 app.listen(3333);
 
