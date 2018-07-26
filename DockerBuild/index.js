@@ -84,6 +84,7 @@ app.all('/query', function(req, res){
   // This endpoint gets the data
   setCORSHeaders(res);
   console.log( new Date() + " /:GET/query")
+  console.log(req.body.range);
   var tsResult = [];
   let targets = req.body.targets
   _.each(targets, (targetObject) => {
