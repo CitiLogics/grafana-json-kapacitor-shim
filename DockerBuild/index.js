@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 var app = express();
 var fetch = require("node-fetch");
-
+const moment = require('moment-timezone');
 app.use(bodyParser.json());
 
 let server = ""
@@ -86,20 +86,43 @@ app.all('/query', function(req, res){
   console.log( new Date() + " /:GET/query")
   console.log(req.body.range);
   var tsResult = [];
-  let targets = req.body.targets
+  let targets;
+  let fromDate;
+  let toDate;
+
+  if(req.body.targets){
+    targets = req.body.targets
+  } else {
+    console.log("Request body does not have a targets property")
+    process.exit(0)
+  }
+
+
+  if (req.body.range.from && req.body.range.to){
+    fromDate = new Date(req.body.range.from) //utc time
+    toDate = new Date(req.body.range.to) //utc time
+  } else {
+    console.log("Date range is not specified in request body")
+    process.exit(0)
+  }
+
+
   _.each(targets, (targetObject) => {
     // each target will be of the format taskid : nodeid
     //split it by semi colon and then access the API with fetch
     let taskDetails = targetObject.target.split(':')
+
     fetch(`http://${server}:${port}/kapacitor/v1/tasks/${taskDetails[0]}/${taskDetails[1]}`)
     .then(response => response.json())
     .then((seriesData) => {
+
       _.each(seriesData.series, function(data) {
         let temp = {}
         let tempTag = ""
         // for(let [key, value] of Object.entries(data.tags)){
         //     tempTag = tempTag + key + " = " + value + "|"
         // }
+
         if(data.columns){
           //there is a columns object it can have more than one measure.
           _.each(data.columns, (columnName) => {
@@ -107,10 +130,20 @@ app.all('/query', function(req, res){
                temp['target'] = data.name + "." + columnName + JSON.stringify(data.tags)
                //store the index of the column so that we can grab that value
                let valueIndex = _.indexOf(data.columns, columnName)
+               data.values = _.reject(data.values, (val) => {
+                 if(new Date(val[0]) < fromDate || new Date(val[0]) > toDate){
+                   return true //reject this
+                 } else {
+                   return false
+                 }
+               })
                _.map(data.values, (val) =>{
                  //getting date, value but we need value, date
+                 // check if the time given by kapacitor is withing the range requested by grafana
+
                  let dataValue = val[valueIndex]
-                 val[1] = new Date(val[0]).getTime();
+                 let kapacitorOpDate = new Date(val[0]).getTime();
+                 val[1] = kapacitorOpDate
                  val[0] = dataValue
                })
                temp['datapoints'] = data.values
@@ -119,6 +152,7 @@ app.all('/query', function(req, res){
           })
         }
       })
+
       res.json(tsResult);
       res.end();
     })
@@ -126,20 +160,21 @@ app.all('/query', function(req, res){
 
 });
 
-app.all('/tag[\-]keys', function(req, res) {
-  setCORSHeaders(res);
-  res.json({"test" :"test"});
-  res.end();
-});
-
-app.all('/tag[\-]values', function(req, res) {
-  setCORSHeaders(res);
-  console.log(req.url);
-  console.log(req.body);
-
-  res.json({"testval":"testval"})
-  res.end();
-});
+// tag-keys and values doesnt do anything !
+// app.all('/tag[\-]keys', function(req, res) {
+//   setCORSHeaders(res);
+//   res.json({"test" :"test"});
+//   res.end();
+// });
+//
+// app.all('/tag[\-]values', function(req, res) {
+//   setCORSHeaders(res);
+//   console.log(req.url);
+//   console.log(req.body);
+//
+//   res.json({"testval":"testval"})
+//   res.end();
+// });
 
 
 app.listen(3333);
