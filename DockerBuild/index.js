@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 let server = ""
 let port = ""
 
-
+// verify that the env variables are set
 if(process.env.KAPGRAF_SHIM_KAPACITOR_HOST){
   server = process.env.KAPGRAF_SHIM_KAPACITOR_HOST
 } else {
@@ -31,6 +31,7 @@ function setCORSHeaders(res) {
   res.setHeader("Access-Control-Allow-Headers", "accept, content-type");
 }
 
+// dummy response to check if server is running
 app.all('/', function(req, res) {
   setCORSHeaders(res);
   res.status(200).send('Kapcitor-JSON-Grafana-shim');
@@ -44,15 +45,13 @@ app.all('/search', function(req, res){
   [taskname1:nodename1,
   taskname1:nodename2,
   ....]
-   when selected will return the data as we need from /query
   */
-  console.log( new Date() + " /:GET/search")
+  console.log( new Date() + " GET: /search")
   setCORSHeaders(res);
   let result = [];
   fetch(`http://${server}:${port}/kapacitor/v1/tasks`)
   .then(response => response.json())
   .then(function(responseData) {
-
     //response data has a parent object { tasks : [{}, {}, {}]}
     _.each(responseData.tasks, (task) => {
       //each task has id attribute which is the task endpoint
@@ -70,7 +69,7 @@ app.all('/search', function(req, res){
           outNode = outNode.replace(/["']/g, "")
           result.push(taskEndPoint + ":" + outNode)
         }
-      } while (m);
+      } while (m); // there can be more than one http out node in a script so we need to get all the matches and create a json
 
     })
     res.json(result);
@@ -81,15 +80,15 @@ app.all('/search', function(req, res){
 
 
 app.all('/query', function(req, res){
-  // This endpoint gets the data
+  // This endpoint gets the data for the requested task
   setCORSHeaders(res);
-  console.log( new Date() + " /:GET/query")
-  console.log(req.body.range);
+  console.log( new Date() + " GET: /query")
   var tsResult = [];
   let targets;
   let fromDate;
   let toDate;
 
+  //the request body should have targets attribute set with taskname:nodename
   if(req.body.targets){
     targets = req.body.targets
   } else {
@@ -97,7 +96,7 @@ app.all('/query', function(req, res){
     process.exit(0)
   }
 
-
+  //there should be a time range specified to select the points
   if (req.body.range.from && req.body.range.to){
     fromDate = new Date(req.body.range.from) //utc time
     toDate = new Date(req.body.range.to) //utc time
@@ -111,36 +110,33 @@ app.all('/query', function(req, res){
     // each target will be of the format taskid : nodeid
     //split it by semi colon and then access the API with fetch
     let taskDetails = targetObject.target.split(':')
-
+    console.log(`Accessing http://${server}:${port}/kapacitor/v1/tasks/${taskDetails[0]}/${taskDetails[1]}`)
     fetch(`http://${server}:${port}/kapacitor/v1/tasks/${taskDetails[0]}/${taskDetails[1]}`)
     .then(response => response.json())
     .then((seriesData) => {
-
       _.each(seriesData.series, function(data) {
         let temp = {}
         let tempTag = ""
-        // for(let [key, value] of Object.entries(data.tags)){
-        //     tempTag = tempTag + key + " = " + value + "|"
-        // }
 
         if(data.columns){
           //there is a columns object it can have more than one measure.
           _.each(data.columns, (columnName) => {
             if(columnName != "time") {
+              //get all the columns except time and create a series out of it
                temp['target'] = data.name + "." + columnName + JSON.stringify(data.tags)
                //store the index of the column so that we can grab that value
                let valueIndex = _.indexOf(data.columns, columnName)
                data.values = _.reject(data.values, (val) => {
+                 //verify if the date in the kapacitor result is within the requested time range
                  if(new Date(val[0]) < fromDate || new Date(val[0]) > toDate){
                    return true //reject this
                  } else {
-                   return false
+                   return false //accept this
                  }
                })
                _.map(data.values, (val) =>{
                  //getting date, value but we need value, date
                  // check if the time given by kapacitor is withing the range requested by grafana
-
                  let dataValue = val[valueIndex]
                  let kapacitorOpDate = new Date(val[0]).getTime();
                  val[1] = kapacitorOpDate
@@ -152,7 +148,6 @@ app.all('/query', function(req, res){
           })
         }
       })
-
       res.json(tsResult);
       res.end();
     })
