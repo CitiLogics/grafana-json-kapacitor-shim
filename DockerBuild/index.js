@@ -64,7 +64,6 @@ app.all('/search', function(req, res){
       do {
         m = re.exec(script)
         if(m){
-          console.log(m)
           let outNode = m.input.substring(m.index).match(quote)[0]
           outNode = outNode.replace(/["']/g, "")
           result.push(taskEndPoint + ":" + outNode)
@@ -116,14 +115,19 @@ app.all('/query', function(req, res){
     .then((seriesData) => {
       _.each(seriesData.series, function(data) {
         let temp = {}
-        let tempTag = ""
 
         if(data.columns){
           //there is a columns object it can have more than one measure.
           _.each(data.columns, (columnName) => {
             if(columnName != "time") {
+              let tagsList = '';
+              _.each(data.tags, (v,k,l) => {
+                tagsList += `${k}: ${v},`;
+              });
+              // trim last comma:
+              tagsList = tagsList.slice(0,-1);
               //get all the columns except time and create a series out of it
-               temp['target'] = data.name + "." + columnName + JSON.stringify(data.tags)
+               temp['target'] = data.name + "." + columnName + ' ' + tagsList
                //store the index of the column so that we can grab that value
                let valueIndex = _.indexOf(data.columns, columnName)
                data.values = _.reject(data.values, (val) => {
