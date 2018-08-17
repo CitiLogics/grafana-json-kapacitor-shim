@@ -120,12 +120,13 @@ app.all('/query', function(req, res){
           //there is a columns object it can have more than one measure.
           _.each(data.columns, (columnName) => {
             if(columnName != "time") {
-              let tagsList = '';
+              let tagsList = '{';
               _.each(data.tags, (v,k,l) => {
                 tagsList += `${k}: ${v},`;
               });
               // trim last comma:
               tagsList = tagsList.slice(0,-1);
+              tagsList += '}'
               //get all the columns except time and create a series out of it
                temp['target'] = data.name + "." + columnName + ' ' + tagsList
                //store the index of the column so that we can grab that value
