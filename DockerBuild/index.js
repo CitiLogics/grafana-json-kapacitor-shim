@@ -123,8 +123,55 @@ app.all('/query', function(req, res){
                     Pick.withParser({filter: 'series'}),
                     streamArray() ]);
 
-      pipeline.on('data', data => console.log(data ));
-      pipeline.on('end', () => console.log("DONE"))
+      pipeline.on('data', (data) => {
+        let temp = {}
+
+        if(data.value.columns) {
+          //there is a columns object it can have more than one measure.
+           _.each(data.value.columns, (columnName) => {
+
+             if(columnName != "time") {
+               let tagsList = '{';
+               _.each(data.value.tags, (v,k,l) => {
+                 tagsList += `${k}: ${v},`;
+               });
+               // trim last comma:
+               tagsList = tagsList.slice(0,-1);
+               tagsList += '}'
+
+               //get all the columns except time and create a series out of it
+                temp['target'] = data.value.name + "." + columnName + ' ' + tagsList
+
+                //store the index of the column so that we can grab that value
+                let valueIndex = _.indexOf(data.value.columns, columnName)
+
+                // if range was specified, then filter the Kapacitor results.
+                if (rangeSpecified) {
+                  data.value.values = _.reject(data.value.values, (val) => {
+                    //verify if the date in the kapacitor result is within the requested time range
+                    return (new Date(val[0]) < fromDate || new Date(val[0]) > toDate)
+                  });
+                }
+
+                _.map(data.value.values, (val) =>{
+
+                  //getting date, value but we need value, date
+                  let dataValue = val[valueIndex]
+                  let kapacitorOpDate = new Date(val[0]).getTime();
+                  val[1] = kapacitorOpDate
+                  val[0] = dataValue
+                })
+                temp['datapoints'] = data.value.values
+                tsResult.push(temp)
+                res.write(JSON.stringify(temp))
+             }
+           })
+        }
+      });
+      pipeline.on('end', () => {
+        res.end()
+        console.log("Finished streaming")
+      })
     })
 
   })
