@@ -99,7 +99,7 @@ app.all('/query', function(req, res){
 
   //there should be a time range specified to select the points
   let rangeSpecified = false;
-  if (req.body.range.from && req.body.range.to){
+  if (req.body.range && req.body.range.from && req.body.range.to){
     rangeSpecified = true;
     fromDate = new Date(req.body.range.from); //utc time
     toDate = new Date(req.body.range.to); //utc time
