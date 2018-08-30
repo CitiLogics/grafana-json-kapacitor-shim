@@ -91,7 +91,7 @@ app.all('/query', function(req, res){
   let targets;
   let fromDate;
   let toDate;
-
+  res.write("[")
 
   //the request body should have targets attribute set with taskname:nodename
   if(req.body.targets){
@@ -162,13 +162,13 @@ app.all('/query', function(req, res){
                   val[0] = dataValue
                 })
                 temp['datapoints'] = data.value.values
-                tsResult.push(temp)
                 res.write(JSON.stringify(temp))
              }
            })
         }
       });
       pipeline.on('end', () => {
+        res.write("]")
         res.end()
         console.log("Finished streaming")
       })
