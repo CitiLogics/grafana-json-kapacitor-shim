@@ -7,6 +7,9 @@ var fetch = require("node-fetch");
 const moment = require('moment-timezone');
 app.use(bodyParser.json());
 app.use(compression());
+const {streamArray} = require('stream-json/streamers/StreamArray');
+const {chain} = require('stream-chain');
+const Pick = require('stream-json/filters/Pick');
 
 let server = ""
 let port = ""
@@ -83,11 +86,12 @@ app.all('/search', function(req, res){
 app.all('/query', function(req, res){
   // This endpoint gets the data for the requested task
   setCORSHeaders(res);
-  console.log( new Date() + " GET: /query")
+  console.log( new Date() + " POST: /query")
   var tsResult = [];
   let targets;
   let fromDate;
   let toDate;
+
 
   //the request body should have targets attribute set with taskname:nodename
   if(req.body.targets){
@@ -113,50 +117,16 @@ app.all('/query', function(req, res){
     let taskDetails = targetObject.target.split(':')
     console.log(`Accessing http://${server}:${port}/kapacitor/v1/tasks/${taskDetails[0]}/${taskDetails[1]}`)
     fetch(`http://${server}:${port}/kapacitor/v1/tasks/${taskDetails[0]}/${taskDetails[1]}`)
-    .then(response => response.json())
-    .then((seriesData) => {
-      _.each(seriesData.series, function(data) {
-        let temp = {}
+    .then((response) => {
+      const pipeline = chain([
+                    response.body,
+                    Pick.withParser({filter: 'series'}),
+                    streamArray() ]);
 
-        if(data.columns){
-          //there is a columns object it can have more than one measure.
-          _.each(data.columns, (columnName) => {
-            if(columnName != "time") {
-              let tagsList = '{';
-              _.each(data.tags, (v,k,l) => {
-                tagsList += `${k}: ${v},`;
-              });
-              // trim last comma:
-              tagsList = tagsList.slice(0,-1);
-              tagsList += '}'
-              //get all the columns except time and create a series out of it
-               temp['target'] = data.name + "." + columnName + ' ' + tagsList
-               //store the index of the column so that we can grab that value
-               let valueIndex = _.indexOf(data.columns, columnName)
-               // if range was specified, then filter the Kapacitor results.
-               if (rangeSpecified) {
-                 data.values = _.reject(data.values, (val) => {
-                   //verify if the date in the kapacitor result is within the requested time range
-                   return (new Date(val[0]) < fromDate || new Date(val[0]) > toDate)
-                 });
-               }
-
-               _.map(data.values, (val) =>{
-                 //getting date, value but we need value, date
-                 let dataValue = val[valueIndex]
-                 let kapacitorOpDate = new Date(val[0]).getTime();
-                 val[1] = kapacitorOpDate
-                 val[0] = dataValue
-               })
-               temp['datapoints'] = data.values
-               tsResult.push(temp)
-            }
-          })
-        }
-      })
-      res.json(tsResult);
-      res.end();
+      pipeline.on('data', data => console.log(data ));
+      pipeline.on('end', () => console.log("DONE"))
     })
+
   })
 
 });
