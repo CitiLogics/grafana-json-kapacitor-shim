@@ -92,18 +92,18 @@ app.all('/query', function(req, res){
     targets = req.body.targets
   } else {
     console.log("Request body does not have a targets property")
-    process.exit(0)
+    res.status(417).json({'error':'no targets specified'});
+    return;
   }
+  console.log(`target for req is: ${req.body.targets}`);
 
   //there should be a time range specified to select the points
+  let rangeSpecified = false;
   if (req.body.range.from && req.body.range.to){
-    fromDate = new Date(req.body.range.from) //utc time
-    toDate = new Date(req.body.range.to) //utc time
-  } else {
-    console.log("Date range is not specified in request body")
-    process.exit(0)
+    rangeSpecified = true;
+    fromDate = new Date(req.body.range.from); //utc time
+    toDate = new Date(req.body.range.to); //utc time
   }
-
 
   _.each(targets, (targetObject) => {
     // each target will be of the format taskid : nodeid
@@ -131,17 +131,16 @@ app.all('/query', function(req, res){
                temp['target'] = data.name + "." + columnName + ' ' + tagsList
                //store the index of the column so that we can grab that value
                let valueIndex = _.indexOf(data.columns, columnName)
-               data.values = _.reject(data.values, (val) => {
-                 //verify if the date in the kapacitor result is within the requested time range
-                 if(new Date(val[0]) < fromDate || new Date(val[0]) > toDate){
-                   return true //reject this
-                 } else {
-                   return false //accept this
-                 }
-               })
+               // if range was specified, then filter the Kapacitor results.
+               if (rangeSpecified) {
+                 data.values = _.reject(data.values, (val) => {
+                   //verify if the date in the kapacitor result is within the requested time range
+                   return (new Date(val[0]) < fromDate || new Date(val[0]) > toDate)
+                 });
+               }
+
                _.map(data.values, (val) =>{
                  //getting date, value but we need value, date
-                 // check if the time given by kapacitor is withing the range requested by grafana
                  let dataValue = val[valueIndex]
                  let kapacitorOpDate = new Date(val[0]).getTime();
                  val[1] = kapacitorOpDate
