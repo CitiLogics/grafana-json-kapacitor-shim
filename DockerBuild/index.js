@@ -95,7 +95,7 @@ app.all('/query', function(req, res){
     res.status(417).json({'error':'no targets specified'});
     return;
   }
-  console.log(`target for req is: ${req.body.targets}`);
+  console.log(`target for req is: ${JSON.stringify(req.body.targets)}`);
 
   //there should be a time range specified to select the points
   let rangeSpecified = false;
