@@ -1,10 +1,12 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var compression = require('compression');
 var _ = require('underscore');
 var app = express();
 var fetch = require("node-fetch");
 const moment = require('moment-timezone');
 app.use(bodyParser.json());
+app.use(compression());
 
 let server = ""
 let port = ""
