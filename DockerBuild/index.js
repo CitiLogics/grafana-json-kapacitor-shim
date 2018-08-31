@@ -82,7 +82,7 @@ app.all('/search', function(req, res){
 
 });
 
-
+// trigger build
 app.all('/query', function(req, res){
   // This endpoint gets the data for the requested task
   setCORSHeaders(res);
