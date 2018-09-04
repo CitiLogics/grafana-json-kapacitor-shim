@@ -91,6 +91,7 @@ app.all('/query', function(req, res){
   let targets;
   let fromDate;
   let toDate;
+  res.header('content-type','application/json')
   res.write("[")
 
   //the request body should have targets attribute set with taskname:nodename
@@ -163,11 +164,13 @@ app.all('/query', function(req, res){
                 })
                 temp['datapoints'] = data.value.values
                 res.write(JSON.stringify(temp))
+                res.write(",")
              }
            })
         }
       });
       pipeline.on('end', () => {
+        res.write('{}')
         res.write("]")
         res.end()
         console.log("Finished streaming")
